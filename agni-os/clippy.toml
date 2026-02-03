@@ -1,0 +1,21 @@
+# ASSUMPTION EXTERMINATION PROTOCOL
+# ENFORCEMENT LEVEL: LETHAL
+
+# 1. BAN SCALAR PHYSICS
+# You cannot use raw floats for control. You must use NewTypes (Voltage, Nanometers).
+disallowed-types = [
+    { path = "f32", reason = "Floating point is non-associative. Use FixedPoint or Strong Types." },
+    { path = "f64", reason = "Floating point is non-associative. Use FixedPoint or Strong Types." }
+]
+
+# 2. BAN BLOCKING TIME
+# Sleep is poison.
+disallowed-methods = [
+    { path = "std::thread::sleep", reason = "Sleep is indeterminate. Use async event loop." },
+    { path = "std::time::SystemTime::now", reason = "Wall clock is not monotonic. Use Instant." }
+]
+
+# 3. BAN UNMANAGED THREADS
+disallowed-macros = [
+    { path = "std::thread::spawn", reason = "Unmanaged threads are forbidden. Use the Supervisor." }
+]
