@@ -42,8 +42,8 @@ where
     }
 
     // 2. Temporal Consistency
-    let min_t = times.iter().min().unwrap();
-    let max_t = times.iter().max().unwrap();
+    let min_t = times.iter().min().unwrap_or(&0); // Safe: fixed-size array
+    let max_t = times.iter().max().unwrap_or(&0);
     if (max_t - min_t) > MAX_TIMESTAMP_SKEW_CYCLES {
         return None;
     }

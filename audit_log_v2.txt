@@ -1,6 +1,0 @@
-Trying model: gemini-1.5-flash-latest
-HTTP Error with gemini-1.5-flash-latest: 404 Not Found
-Trying model: gemini-1.5-flash
-HTTP Error with gemini-1.5-flash: 404 Not Found
-Trying model: gemini-pro
-HTTP Error with gemini-pro: 404 Not Found

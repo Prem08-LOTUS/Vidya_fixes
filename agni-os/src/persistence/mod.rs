@@ -123,6 +123,15 @@ impl PersistenceManager {
     }
 
     pub async fn save_snapshot(&self, snap: SystemSnapshot) -> Result<(), PersistenceError> {
+        // [FIX] Liveness Hazard: Update In-Memory Cache FIRST
+        // This ensures the UI thread (which reads last_snapshot) never waits on slow Disk I/O.
+        // The lock is held only for a few nanoseconds to swap the pointer.
+        {
+            let mut cache = self.last_snapshot.lock().await;
+            *cache = Some(snap.clone());
+        } // Lock released here
+
+        // Now perform slow IO without holding the lock
         let json = serde_json::to_string(&snap)?;
         let now = snap.timestamp.to_rfc3339();
 
@@ -132,11 +141,11 @@ impl PersistenceManager {
             .execute(&self.pool)
             .await?;
 
+        // Housekeeping (can be done asynchronously/later, but fine here now that lock is free)
         sqlx::query("DELETE FROM snapshots WHERE id NOT IN (SELECT id FROM snapshots ORDER BY id DESC LIMIT 1000)")
             .execute(&self.pool)
             .await?;
 
-        *self.last_snapshot.lock().await = Some(snap);
         Ok(())
     }
 
