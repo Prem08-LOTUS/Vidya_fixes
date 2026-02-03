@@ -62,6 +62,11 @@ impl MPC {
 
             // Clamp
             u_candidate = u_candidate.clamp(-MAX_VOLTAGE, MAX_VOLTAGE);
+
+            // [FIX] Floating Point Non-Determinism / NaN Propagation
+            if !u_candidate.is_finite() {
+                return 0.0; // Fail-Safe to 0V
+            }
         }
 
         u_candidate

@@ -77,43 +77,37 @@ impl SensorMonitor {
         match self.client.get(&url).send().await {
             Ok(resp) => {
                 if let Ok(msg) = resp.json::<SignedMessage>().await {
-                    // Verify HMAC
-                    // 1. Reconstruct payload_json
-                    let payload_val = match serde_json::to_value(&msg.payload) {
-                        Ok(v) => v,
-                        Err(_) => return Measurement::new(ThermalField::default(), f64::INFINITY, 0),
-                    };
+                    // Verify HMAC with Deterministic Serialization
+                    // [FIX] Use manual string formatting to guarantee order and float precision
+                    // Matches Python implementation: f"rh={rh:.2f}|temp={temp:.2f}|safe={safe}|ts={ts}|nonce={nonce}"
 
-                    if let serde_json::Value::Object(map) = payload_val {
-                        // Sort keys
-                        let sorted: BTreeMap<_, _> = map.into_iter().collect();
-                        let payload_json = match serde_json::to_string(&sorted) {
-                             Ok(s) => s,
-                             Err(_) => return Measurement::new(ThermalField::default(), f64::INFINITY, 0),
-                        };
+                    let p = &msg.payload;
+                    let canonical_msg = format!(
+                        "rh={:.2}|temp={:.2}|safe={}|ts={}|nonce={}",
+                        p.rh, p.temperature, if p.safe { "true" } else { "false" }, msg.timestamp, msg.nonce
+                    );
 
-                        let message = format!("{}|{}|{}", payload_json, msg.timestamp, msg.nonce);
+                    let mut mac = HmacSha256::new_from_slice(self.secret.as_bytes())
+                        .expect("Invalid Key Length");
+                    mac.update(canonical_msg.as_bytes());
+                    let result = mac.finalize();
+                    let expected_hex = hex::encode(result.into_bytes());
 
-                        let mut mac = HmacSha256::new_from_slice(self.secret.as_bytes())
-                            .expect("Invalid Key Length");
-                        mac.update(message.as_bytes());
-                        let result = mac.finalize();
-                        let code_bytes = result.into_bytes();
-                        let expected_hex = hex::encode(code_bytes);
+                    if expected_hex != msg.hmac {
+                        error!("SECURITY: HMAC Signature Mismatch! Possible Tampering or Serialization Error.");
+                        // error!("Canonical: {}", canonical_msg); // Debug only
+                        return Measurement::new(ThermalField::default(), f64::INFINITY, 0);
+                    }
 
-                        if expected_hex != msg.hmac {
-                            error!("SECURITY: HMAC Signature Mismatch! Possible Tampering.");
-                            return Measurement::new(ThermalField::default(), f64::INFINITY, 0);
-                        }
+                    // Check freshness (5s)
+                    // [FIX] Use u128 to prevent overflow/truncation issues
+                    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+                    if now.abs_diff(msg.timestamp as u128) > 5000 {
+                        error!("SECURITY: Replay Attack Detected (Stale Timestamp)");
+                        return Measurement::new(ThermalField::default(), f64::INFINITY, 0);
+                    }
 
-                        // Check freshness (5s)
-                        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64;
-                        if now.abs_diff(msg.timestamp) > 5000 {
-                            error!("SECURITY: Replay Attack Detected (Stale Timestamp)");
-                            return Measurement::new(ThermalField::default(), f64::INFINITY, 0);
-                        }
-
-                        // Success
+                    // Success
                         let t = msg.payload.temperature;
                         let field = ThermalField {
                             sensors: [t, t, t, t], // Uniform field assumption

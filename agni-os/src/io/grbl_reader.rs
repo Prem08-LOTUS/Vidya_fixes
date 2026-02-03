@@ -17,8 +17,8 @@ impl GrblStatusBuffer {
     }
 
     pub fn push(&mut self, data: &str) -> Option<f64> {
-        // D-05: Unbounded Buffer Growth Fix
-        if self.buf.len() + data.len() > MAX_BUFFER_SIZE {
+        // [FIX] Integer Overflow Check + D-05
+        if data.len() > MAX_BUFFER_SIZE - self.buf.len() {
             // Fix Defect in Reader:
             // Clearing buffer causes data loss. We should retain the end.
             // Keep last 1024 bytes (enough for a few frames)

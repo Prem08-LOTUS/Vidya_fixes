@@ -45,8 +45,8 @@ impl GdsiiStreamingParser {
         }
 
         // 5. Read Payload
-        let _rec_type = self.cursor.read_u8().unwrap();
-        let _data_type = self.cursor.read_u8().unwrap();
+        let _rec_type = self.cursor.read_u8().map_err(|_| "GDSII_EOF: Failed to read record type")?;
+        let _data_type = self.cursor.read_u8().map_err(|_| "GDSII_EOF: Failed to read data type")?;
 
         let payload_len = (record_len - 4) as usize;
         let mut payload = vec![0u8; payload_len];

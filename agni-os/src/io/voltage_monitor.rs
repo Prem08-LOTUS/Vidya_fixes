@@ -11,7 +11,8 @@ impl VoltageMonitor {
         // [FIX] REMOVED BLIND MOCK
         // Previous code returned Ok(24.0) unconditionally, masking brownouts.
 
-        // 1. Check for explicit unsafe bypass
+        // 1. Check for explicit unsafe bypass (DEV ONLY)
+        #[cfg(debug_assertions)]
         if let Ok(v_str) = std::env::var("AGNIX_UNSAFE_IGNORE_VOLTAGE") {
             warn!("SAFETY CRITICAL: VOLTAGE MONITORING DISABLED BY ENVIRONMENT VARIABLE. BROWNOUT PROTECTION INACTIVE.");
             if let Ok(v) = v_str.parse::<f64>() {

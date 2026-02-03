@@ -21,10 +21,15 @@ class HmacAuthenticator:
             nonce = str(uuid.uuid4())
 
         timestamp = int(time.time() * 1000)  # milliseconds
-        payload_json = json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
-        message = f"{payload_json}|{timestamp}|{nonce}".encode('utf-8')
-        signature = hmac.new(self.secret, message, hashlib.sha256).digest()
+        # [FIX] Use Deterministic Format matching Rust
+        # "rh={:.2}|temp={:.2}|safe={}|ts={}|nonce={}"
+        # Note: Python bool str is 'True'/'False', Rust is 'true'/'false'. We use lower.
+
+        safe_str = "true" if payload["safe"] else "false"
+        message_str = f"rh={payload['rh']:.2f}|temp={payload['temperature']:.2f}|safe={safe_str}|ts={timestamp}|nonce={nonce}"
+
+        signature = hmac.new(self.secret, message_str.encode('utf-8'), hashlib.sha256).digest()
 
         return {
             "payload": payload,
