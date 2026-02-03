@@ -159,7 +159,28 @@ class RealClimateController:
         # Read sensors
         read_result = self.read_sht40()
         if read_result is None or read_result[0] is None:
-            return self.state
+            # [FIX #134] Zombie State (Stale Data)
+            # Do NOT return old state. We must indicate failure.
+            # Since this returns HardwareState, we must decide how to signal error.
+            # We will return the old state but with a specific flag or throw error if caller handles it.
+            # But looking at usage, returning self.state means the caller sees OLD timestamp?
+            # self.state.timestamp was updated in previous valid cycle.
+            # So if we return it, the timestamp IS old.
+            # However, the flaw description says "Returns OLD state with updated timestamp?"
+            # In my code: `self.state = HardwareState(timestamp=datetime.now())` is init.
+            # If I return `self.state`, the timestamp is indeed old (from last valid step).
+            # The issue is likely that the caller MIGHT interpret it as valid current state if they don't check timestamp.
+            # But the user says "The hardware controller reports old data as current".
+            # To fix: invalid data should propagate.
+            # We will return None or raise.
+            # But the signature implies returning HardwareState.
+            # Let's panic/raise to ensure the supervision loop catches it.
+            print("[CRITICAL] Sensor Read Failed - Safety Halt")
+            # Set actuators to safe state
+            self.heater_pwm.ChangeDutyCycle(0)
+            self.mist_pwm.ChangeDutyCycle(0)
+            self.fan_pwm.ChangeDutyCycle(0)
+            raise RuntimeError("Sensor Read Failure - Zombie State Prevention")
 
         temp, humidity = read_result
 

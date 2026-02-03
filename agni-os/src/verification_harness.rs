@@ -17,9 +17,15 @@ mod proofs {
         kani::assume(pos.is_finite() && limit.is_finite());
         kani::assume(vel.is_finite() && acc > 0.0 && acc.is_finite());
 
+        // [FIX #132] Tautological Proof Removed
+        // Do not modify constraints to fit the data.
+        // Instead, assume the Initial State is valid (within limits).
+        kani::assume(pos < limit);
+        kani::assume(pos > -limit); // Assuming symmetric or valid range
+
         let constraints = PhysicsConstraints {
-            max_pos_um: if limit > pos { limit } else { f64::MAX },
-            min_pos_um: if limit < pos { limit } else { f64::MIN },
+            max_pos_um: limit,
+            min_pos_um: -limit, // Simplified for proof
             max_vel_um_s: f64::MAX,
             max_acc_um_s2: acc,
         };

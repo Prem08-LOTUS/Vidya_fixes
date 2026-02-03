@@ -38,9 +38,10 @@ class RHController:
         try:
             self.bus = smbus2.SMBus(1)
         except (FileNotFoundError, PermissionError):
-             # Mock for non-Pi environment
-             print("[WARN] I2C bus not found, using mock")
+             # [FIX #128] Silent Mock Removed. Fail Fast.
+             print("[CRITICAL] I2C bus not found. Hardware required.")
              self.bus = None
+             # We let it initialize but it will fail on read
 
         self.sht40_addr = 0x44
         try:
@@ -66,9 +67,8 @@ class RHController:
     def read_sht40(self):
         """Read humidity + temperature"""
         if self.bus is None:
-            # Mock data for testing
-            import random
-            return 50.0 + random.uniform(-1, 1), 25.0 + random.uniform(-0.1, 0.1)
+            # [FIX #128] No silent mock.
+            raise RuntimeError("Hardware I2C Bus Not Available")
 
         try:
             self.bus.write_i2c_block_data(self.sht40_addr, 0xFD, [])
@@ -79,7 +79,8 @@ class RHController:
             temp = ((((data[3] << 8) | data[4]) / 65535.0) * 175.0) - 45.0
 
             return rh, temp
-        except:
+        except Exception as e:
+            print(f"I2C Read Failed: {e}")
             return None, None
 
     def pid_step(self, current_rh):
@@ -107,18 +108,19 @@ class RHController:
                 rh, temp = self.read_sht40()
 
                 if rh is None:
-                    time.sleep(1.0)
+                    # [FIX #133] Actuator Latch (Fail-Safe)
+                    if hasattr(self, 'mist_pwm'):
+                         self.mist_pwm.ChangeDutyCycle(0)
+                    time.sleep(0.1) # Retry faster
                     continue
 
                 self.state.current_rh = rh
                 self.state.current_temp = temp
 
-                if abs(rh - self.state.setpoint) > 3.0:
-                    pwm = 0
-                    self.state.is_paused = True
-                else:
-                    pwm = self.pid_step(rh)
-                    self.state.is_paused = False
+                # [FIX #127] Deadband Trap Removed
+                # [FIX #129] Time Dilation - Loop matches PID dt (10Hz)
+                pwm = self.pid_step(rh)
+                self.state.is_paused = False
 
                 if hasattr(self, 'mist_pwm'):
                     self.mist_pwm.ChangeDutyCycle(pwm)
@@ -134,9 +136,10 @@ class RHController:
                 with open(os.path.join(self.log_dir, "rh_log.jsonl"), "a") as f:
                     f.write(json.dumps(log_entry) + "\n")
 
-                print(f"[{cycle:04d}] RH={rh:5.1f}% T={temp:5.2f}Â°C | Mist={pwm:3.0f}%")
+                if cycle % 10 == 0:
+                    print(f"[{cycle:04d}] RH={rh:5.1f}% T={temp:5.2f}Â°C | Mist={pwm:3.0f}%")
 
-                time.sleep(1.0)
+                time.sleep(0.1) # [FIX #129] 10Hz Control Loop
 
         except KeyboardInterrupt:
             print("\n[RH] Interrupted")
