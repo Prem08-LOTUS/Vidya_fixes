@@ -11,8 +11,8 @@ impl PhysicsEnvelope {
         curr_pos: f64,
         dt_s: f64,
     ) -> Result<(), &'static str> {
-        if dt_s <= 0.0 {
-            return Ok(()); // Ignore invalid dt
+        if dt_s <= 1e-9 {
+            return Ok(()); // Ignore invalid/epsilon dt to prevent explosion
         }
         let vel = (curr_pos - prev_pos) / dt_s;
         if vel.abs() > self.max_vel_nm_s {

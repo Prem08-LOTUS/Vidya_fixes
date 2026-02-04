@@ -16,42 +16,67 @@ impl GdsiiStreamingParser {
         }
     }
 
-    pub fn next_record(&mut self) -> Result<Option<(u16, Vec<u8>)>, String> {
+    pub fn next_record(&mut self) -> Result<Option<(u8, Vec<u8>)>, String> {
         let pos = self.cursor.position();
 
-        // 1. Check for EOF header space
         if self.total_len - pos < 4 {
-            if self.total_len - pos == 0 { return Ok(None); } // Clean EOF
+            if self.total_len - pos == 0 { return Ok(None); }
             return Err("GDSII_TRUNCATED: Incomplete header at EOF".into());
         }
 
-        // 2. Peek Length
         let record_len = self.cursor.read_u16::<BigEndian>().map_err(|_| "IO Error")?;
 
-        // 3. Security Check: Minimum Record Size
-        // GDSII spec: Min length is 4 (2 bytes len + 1 byte rec_type + 1 byte data_type)
         if record_len < 4 {
             return Err(format!("GDSII_CORRUPT: Invalid record length {}", record_len));
         }
 
-        // 4. Security Check: Bounds Validation (The "Vandal" Fix)
-        // Does the stated length exceed the remaining file size?
         let remaining = self.total_len - pos;
         if (record_len as u64) > remaining {
-            return Err(format!(
-                "GDSII_BUFFER_OVERREAD: Record claims {} bytes, only {} remain",
-                record_len, remaining
-            ));
+            return Err(format!("GDSII_BUFFER_OVERREAD: Record claims {} bytes, only {} remain", record_len, remaining));
         }
 
-        // 5. Read Payload
-        let _rec_type = self.cursor.read_u8().map_err(|_| "GDSII_EOF: Failed to read record type")?;
+        let rec_type = self.cursor.read_u8().map_err(|_| "GDSII_EOF: Failed to read record type")?;
         let _data_type = self.cursor.read_u8().map_err(|_| "GDSII_EOF: Failed to read data type")?;
 
         let payload_len = (record_len - 4) as usize;
         let mut payload = vec![0u8; payload_len];
         self.cursor.read_exact(&mut payload).map_err(|_| "Payload read failed")?;
 
-        Ok(Some((record_len, payload)))
+        Ok(Some((rec_type, payload)))
+    }
+
+    pub fn next_polygon(&mut self) -> Result<Option<Vec<(f64, f64)>>, String> {
+        let mut points = Vec::new();
+        let mut in_boundary = false;
+
+        loop {
+            match self.next_record()? {
+                Some((rec_type, payload)) => {
+                    // BOUNDARY = 0x08
+                    if rec_type == 0x08 {
+                        in_boundary = true;
+                    }
+                    // XY = 0x10
+                    else if rec_type == 0x10 && in_boundary {
+                        // Parse XY: List of 4-byte signed integers (Big Endian)
+                        if payload.len() % 8 != 0 {
+                            return Err("GDSII_XY: Malformed coordinate list".into());
+                        }
+                        let count = payload.len() / 8;
+                        let mut rdr = Cursor::new(payload);
+                        for _ in 0..count {
+                            let x = rdr.read_i32::<BigEndian>().unwrap_or(0) as f64 / 1000.0; // Scale? Assumed nm/um
+                            let y = rdr.read_i32::<BigEndian>().unwrap_or(0) as f64 / 1000.0;
+                            points.push((x, y));
+                        }
+                    }
+                    // ENDEL = 0x11
+                    else if rec_type == 0x11 && in_boundary {
+                        return Ok(Some(points));
+                    }
+                },
+                None => return Ok(None),
+            }
+        }
     }
 }
