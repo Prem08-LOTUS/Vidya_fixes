@@ -27,39 +27,52 @@ except (ImportError, RuntimeError):
 
 @dataclass
 class RHState:
-    setpoint: float = 50.0
+    rh_setpoint: float = 50.0
+    temp_setpoint: float = 25.0
     current_rh: float = 0.0
     current_temp: float = 0.0
     mist_pwm: int = 0
+    heater_pwm: int = 0
     is_paused: bool = False
 
 class RHController:
-    def __init__(self, mist_gpio=17, fan_gpio=27):
+    def __init__(self, mist_gpio=17, fan_gpio=27, heater_gpio=18):
         try:
             self.bus = smbus2.SMBus(1)
         except (FileNotFoundError, PermissionError):
              # [FIX #128] Silent Mock Removed. Fail Fast.
              print("[CRITICAL] I2C bus not found. Hardware required.")
              self.bus = None
-             # We let it initialize but it will fail on read
 
         self.sht40_addr = 0x44
         try:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(mist_gpio, GPIO.OUT)
             GPIO.setup(fan_gpio, GPIO.OUT)
+            GPIO.setup(heater_gpio, GPIO.OUT)
+
             self.mist_pwm = GPIO.PWM(mist_gpio, 1000)
             self.mist_pwm.start(0)
+
             self.fan_pwm = GPIO.PWM(fan_gpio, 1000)
             self.fan_pwm.start(0)
+
+            self.heater_pwm = GPIO.PWM(heater_gpio, 1000)
+            self.heater_pwm.start(0)
         except Exception:
-             # In case mock fails or weirdness
              pass
 
         self.state = RHState()
-        self.kp, self.ki, self.kd = 2.5, 0.8, 0.2
-        self.integral = 0.0
-        self.prev_error = 0.0
+
+        # RH PID
+        self.rh_kp, self.rh_ki, self.rh_kd = 2.5, 0.8, 0.2
+        self.rh_integral = 0.0
+        self.rh_prev_error = 0.0
+
+        # Temp PID
+        self.temp_kp, self.temp_ki, self.temp_kd = 15.0, 2.0, 0.5
+        self.temp_integral = 0.0
+        self.temp_prev_error = 0.0
 
         self.log_dir = os.path.expanduser("~/agni-workspace/logs")
         os.makedirs(self.log_dir, exist_ok=True)
@@ -83,17 +96,21 @@ class RHController:
             print(f"I2C Read Failed: {e}")
             return None, None
 
-    def pid_step(self, current_rh):
-        """Calculate PID output"""
-        error = self.state.setpoint - current_rh
+    def pid_rh(self, current_rh):
+        error = self.state.rh_setpoint - current_rh
+        p_term = self.rh_kp * error
+        self.rh_integral = max(-100, min(100, self.rh_integral + self.rh_ki * error * 0.1))
+        d_term = self.rh_kd * (error - self.rh_prev_error) / 0.1
+        self.rh_prev_error = error
+        return max(0, min(100, p_term + self.rh_integral + d_term))
 
-        p_term = self.kp * error
-        self.integral = max(-100, min(100, self.integral + self.ki * error * 0.1))
-        i_term = self.integral
-        d_term = self.kd * (error - self.prev_error) / 0.1
-        self.prev_error = error
-
-        return max(0, min(100, p_term + i_term + d_term))
+    def pid_temp(self, current_temp):
+        error = self.state.temp_setpoint - current_temp
+        p_term = self.temp_kp * error
+        self.temp_integral = max(-100, min(100, self.temp_integral + self.temp_ki * error * 0.1))
+        d_term = self.temp_kd * (error - self.temp_prev_error) / 0.1
+        self.temp_prev_error = error
+        return max(0, min(100, p_term + self.temp_integral + d_term))
 
     def control_loop(self, duration_seconds=600):
         """Main RH control loop"""
@@ -132,18 +149,28 @@ class RHController:
 
                 # [FIX #127] Deadband Trap Removed
                 # [FIX #129] Time Dilation - Loop matches PID dt (10Hz)
-                pwm = self.pid_step(rh)
-                self.state.is_paused = False
 
+                # RH Control
+                mist_val = self.pid_rh(rh)
                 if hasattr(self, 'mist_pwm'):
-                    self.mist_pwm.ChangeDutyCycle(pwm)
+                    self.mist_pwm.ChangeDutyCycle(mist_val)
+                self.state.mist_pwm = int(mist_val)
+
+                # Temp Control
+                heater_val = self.pid_temp(temp)
+                if hasattr(self, 'heater_pwm'):
+                    self.heater_pwm.ChangeDutyCycle(heater_val)
+                self.state.heater_pwm = int(heater_val)
+
+                self.state.is_paused = False
 
                 # Log properly
                 log_entry = {
                     "timestamp_iso": datetime.now().isoformat(),
                     "rh_percent": rh,
                     "temperature_c": temp,
-                    "mist_pwm": pwm,
+                    "mist_pwm": mist_val,
+                    "heater_pwm": heater_val,
                     "is_paused": self.state.is_paused
                 }
                 with open(os.path.join(self.log_dir, "rh_log.jsonl"), "a") as f:

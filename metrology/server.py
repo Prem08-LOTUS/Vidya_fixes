@@ -26,17 +26,17 @@ if HMAC_SECRET == b"default-insecure-secret-for-dev-only":
     logger.warning("RUNNING WITH INSECURE DEFAULT HMAC SECRET! SET AGNIX_HMAC_SECRET.")
 
 # Controllers
+# [FIX] Consolidated Controller using RHController (extended to handle Temp)
+# This removes the "Silent Mock" in temperature_controller.py and uses the real SHT40 data.
 rh_ctrl = RHController()
-temp_ctrl = TemperatureController()
 
 # Background Loops
 threading.Thread(target=rh_ctrl.control_loop, kwargs={'duration_seconds': 31536000}, daemon=True).start()
-threading.Thread(target=temp_ctrl.control_loop, kwargs={'duration_seconds': 31536000}, daemon=True).start()
 
 @app.get("/status")
 def get_status():
     current_rh = rh_ctrl.state.current_rh
-    current_temp = temp_ctrl.current_temp
+    current_temp = rh_ctrl.state.current_temp
 
     # Safety Logic (40-60% RH, 20-30C)
     rh_safe = 40.0 <= current_rh <= 60.0
