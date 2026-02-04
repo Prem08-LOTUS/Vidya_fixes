@@ -105,10 +105,13 @@ class RHController:
         try:
             while time.time() - start < duration_seconds:
                 # [FIX] Software Watchdog / Keep-Alive
-                # In a real RTOS we'd pet a HW watchdog.
-                # Here we ensure we touch a file or variable that Supervisor can check.
-                # For now, we rely on the fact that this loop must not block.
-                # read_sht40() has internal I2C timeouts (implicit in smbus2/Linux driver).
+                # Pet the watchdog by touching a file.
+                # Rust Supervisor will monitor this file's mtime.
+                try:
+                    with open("/tmp/agnix_watchdog.lock", "w") as f:
+                        f.write(str(time.time()))
+                except Exception as e:
+                    print(f"[CRITICAL] Watchdog Pet Failed: {e}")
 
                 cycle += 1
                 rh, temp = self.read_sht40()

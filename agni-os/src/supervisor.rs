@@ -72,17 +72,31 @@ pub async fn supervisor_task(
     loop {
         sleep(Duration::from_millis(100)).await; // Poll 10Hz
 
+        // 1. Check Motion Loop Heartbeat
         let age = heartbeat.age_ms();
         if age > max_age_ms {
-            error!("CRITICAL: HEARTBEAT LOST ({}ms > {}ms) -> TRIGGERING EMERGENCY HALT", age, max_age_ms);
+            error!("CRITICAL: MOTION HEARTBEAT LOST ({}ms > {}ms) -> TRIGGERING EMERGENCY HALT", age, max_age_ms);
             state.trigger_halt();
-
-            // Fix Defect #1: Orphaned Hardware State.
-            // If the motion thread is dead (heartbeat lost), it cannot read the halt flag.
-            // We must kill the process to force the OS/Hardware to de-energize (drop DTR/RTS).
-            // This is the only safe way to handle a zombie controller thread.
             error!("SUPERVISOR: TERMINATING PROCESS TO ENSURE HARDWARE STOP");
             std::process::exit(1);
+        }
+
+        // 2. Check Metrology Heartbeat (Python Watchdog)
+        // [FIX] External Process Supervision
+        if let Ok(meta) = std::fs::metadata("/tmp/agnix_watchdog.lock") {
+            if let Ok(modified) = meta.modified() {
+                if let Ok(elapsed) = modified.elapsed() {
+                    if elapsed.as_secs() > 2 {
+                        error!("CRITICAL: METROLOGY WATCHDOG EXPIRED (> 2s) -> HALTING");
+                        state.trigger_halt();
+                        // We don't exit(1) here necessarily, because Rust is alive.
+                        // We assume state.halt() stops motion.
+                        // But if Python is controlling actuators (RH), we might want to panic?
+                        // "Orphaned Actuators" implies we should maybe kill everything.
+                        // But let's start with a soft halt.
+                    }
+                }
+            }
         }
     }
 }

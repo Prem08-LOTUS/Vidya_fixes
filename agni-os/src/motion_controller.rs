@@ -312,6 +312,12 @@ impl MotionController {
             let sensor_health = if self.is_healthy() { "OK".to_string() } else { "FAULT".to_string() };
 
             if is_system_active {
+                // [FIX] Update Thermal State for is_healthy() check
+                // "Dead Thermal Check" logic flaw
+                let tf = safety_cache.get_thermal_field();
+                let tm = Measurement::new(tf, 0.01, 0); // Assuming 0.01 uncertainty from metrology
+                self.last_thermal = Some(tm);
+
                 let time_s = system_start.elapsed().as_secs_f64();
                 if let Ok(m) = self.get_true_position_measurement(time_s).await {
                     pos_measurement = m;
