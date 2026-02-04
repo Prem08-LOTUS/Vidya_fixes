@@ -8,6 +8,7 @@ use tracing::{info, error, warn};
 use tokio::sync::mpsc;
 use std::time::Duration;
 use std::path::PathBuf;
+use futures::FutureExt; // For catch_unwind
 
 use agnix::motion_controller::{MotionController, PriorityCommand};
 use agnix::persistence::{PersistenceManager, MotionIntent, RecoveryState, SystemSnapshot};
@@ -219,13 +220,33 @@ async fn spawn_motion_thread(
 
     let port_name = std::env::var("AGNIX_PORT").unwrap_or("/dev/ttyUSB0".to_string());
     if let Err(e) = motion.connect(&port_name) {
-        warn!("Hardware connect failed (Sim Mode): {}", e);
+        // [FIX] If connect fails and NOT in sim mode, we should panic or halt?
+        // Current logic warns. If AGNIX_SIMULATION is set, connect() succeeds (Virtual).
+        // If not set, and serial fails, we warn.
+        // We should ensure the system enters HALT state if connection failed.
+        warn!("Hardware connect failed: {}", e);
+        motion.system_state().trigger_halt();
     }
 
     tokio::spawn(async move {
-        if let Err(e) = motion.run_rt_loop(rx, priority_rx, tx, safety, start_locked).await {
-            error!("RT Loop Crashed: {}", e);
-            std::process::exit(1);
+        // [FIX] Harden Panic Handling
+        let result = std::panic::AssertUnwindSafe(async {
+            motion.run_rt_loop(rx, priority_rx, tx, safety, start_locked).await
+        }).catch_unwind().await;
+
+        match result {
+            Ok(Ok(())) => info!("RT Loop Exited Cleanly"),
+            Ok(Err(e)) => {
+                error!("RT Loop Error: {}", e);
+                std::process::exit(1);
+            },
+            Err(payload) => {
+                error!("CRITICAL: RT LOOP PANIC. TERMINATING.");
+                if let Some(s) = payload.downcast_ref::<&str>() {
+                    error!("Panic Reason: {}", s);
+                }
+                std::process::exit(1);
+            }
         }
     });
 

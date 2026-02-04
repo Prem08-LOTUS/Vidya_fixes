@@ -8,6 +8,7 @@ use crate::compute::ComputeEngine;
 use crate::supervisor::{Heartbeat, SystemState};
 use crate::io::grbl_reader::GrblStatusBuffer;
 use crate::io::voltage_monitor::VoltageMonitor;
+use crate::io::sim_driver::SimulatedMotionDriver;
 use crate::telemetry::flight_recorder::{FlightRecorder, BlackBoxRecord};
 use crate::safety::state::SafetyState;
 use crate::safety::envelope::EnvelopeGuardian;
@@ -45,6 +46,8 @@ pub struct MotionController {
     #[cfg(feature = "serial")]
     port: Option<SerialStream>,
     port_path: Option<String>,
+
+    sim_driver: Option<SimulatedMotionDriver>, // [NEW] Simulation Backend
 
     grbl_parser: GrblStatusBuffer,
     flight_recorder: Arc<Mutex<FlightRecorder<6000>>>,
@@ -161,6 +164,12 @@ impl MotionController {
     pub fn system_state(&self) -> SystemState { self.state.clone() }
     pub fn heartbeat(&self) -> Heartbeat { self.heartbeat.clone() }
     pub fn connect(&mut self, port: &str) -> Result<()> {
+        if std::env::var("AGNIX_SIMULATION").is_ok() {
+            info!("SIMULATION MODE ACTIVE: Using Virtual Physics Driver");
+            self.sim_driver = Some(SimulatedMotionDriver::new());
+            return Ok(());
+        }
+
         #[cfg(feature = "serial")]
         {
             let mut s = tokio_serial::new(port, 115200).open_native_async()?;
@@ -176,6 +185,15 @@ impl MotionController {
     }
 
     async fn send_raw(&mut self, cmd: &str) -> Result<()> {
+        if let Some(_sim) = &mut self.sim_driver {
+            // In sim, we might process commands like "!" or "?" here if needed.
+            // But we simulate "?" in get_true_position.
+            if cmd == "!" {
+                warn!("SIMULATION: EMERGENCY HALT RECEIVED");
+            }
+            return Ok(());
+        }
+
         #[cfg(feature = "serial")]
         if let Some(port) = &mut self.port {
             port.write_all(cmd.as_bytes()).await?;
@@ -186,6 +204,44 @@ impl MotionController {
     }
 
     async fn get_true_position_measurement(&mut self, _time_s: f64) -> Result<Measurement<Nanometers>> {
+        if let Some(sim) = &mut self.sim_driver {
+            // Apply last known control voltage to update physics
+            // We need to know the voltage.
+            // Ideally we'd store it in the struct or pass it.
+            // But get_true_position happens BEFORE control step.
+            // Sim update logic:
+            // We need to apply the PREVIOUS cycle's voltage.
+            // We don't have it easily here without modifying state.
+            // Let's assume we update with 0.0 for now in the read step,
+            // OR we move update logic to `sim_step(volts)` and `read` just reads.
+            // For robustness, let's assume the driver maintains state and we just peek.
+            // But wait, the driver needs to evolve over time.
+            // We'll peek here. The evolution happens when we command it?
+            // No, reality evolves continuously.
+            // We should `update` with the last commanded voltage.
+            // But we don't store `last_commanded_volts` in `MotionController`.
+            // Let's store it.
+
+            // For now, let's just assume we read the current state.
+            // The driver needs to be updated somewhere.
+            // We can update it in the control loop after calculation!
+            // But `get_true_position` is the start of the loop.
+            // So we read the state resulting from previous cycle.
+            // But if we don't call `update`, time doesn't pass in the sim.
+            // We should call `sim.update(last_volts)`.
+            // I'll add `last_output_volts` to MotionController state or just pass 0.0 if idle.
+            // Since I can't easily add a field to struct in a partial patch without search/replace struct def again...
+            // I'll assume 0.0 for read, effectively coasting.
+            // Ideally we'd fix this, but for "Vibe Check" it's okay if it coasts during read.
+            // Wait, I can add `sim_step` method to MotionController called at end of loop?
+            // Actually, I'll update it inside the loop when I calculate volts.
+
+            let pos_um = sim.position_um;
+            let z_nm = pos_um * 1000.0;
+            self.raw_sensor_cache = [z_nm, z_nm, z_nm];
+            return Ok(Measurement::new(Nanometers(z_nm), 1.0, 0));
+        }
+
         #[cfg(feature = "serial")]
         {
             if let Some(port) = &mut self.port {
@@ -355,6 +411,11 @@ impl MotionController {
 
                 let target_um = self.active_target_nm.unwrap_or(est_pos) / 1000.0;
                 computed_volts = self.compute.step(est_pos / 1000.0, target_um);
+
+                // [SIMULATION FEEDBACK LOOP]
+                if let Some(sim) = &mut self.sim_driver {
+                    sim.update(computed_volts);
+                }
 
                 loop_cnt += 1;
                 if loop_cnt % UI_TELEMETRY_DECIMATION == 0 {

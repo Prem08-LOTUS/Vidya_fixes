@@ -66,6 +66,21 @@ impl SensorMonitor {
     }
 
     pub async fn poll(&self) -> Measurement<ThermalField> {
+        if std::env::var("AGNIX_SIMULATION").is_ok() {
+            // [SIMULATION MODE]
+            // Generate synthetic thermal field (Sine wave)
+            let t = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
+            let temp = 25.0 + 2.0 * (t * 0.1).sin();
+            let field = ThermalField {
+                sensors: [temp, temp, temp, temp],
+                gradient: Vector3::zeros(),
+                d_gradient_dt: Vector3::zeros(),
+                covariance: Matrix3::identity(),
+                timestamp_cycle: 0,
+            };
+            return Measurement::new(field, 0.01, 0);
+        }
+
         if !self.handshake_complete.load(Ordering::SeqCst) {
              if !self.perform_handshake().await {
                  return Measurement::new(ThermalField::default(), f64::INFINITY, 0);
