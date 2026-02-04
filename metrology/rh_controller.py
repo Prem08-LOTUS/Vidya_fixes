@@ -107,8 +107,12 @@ class RHController:
                 # [FIX] Software Watchdog / Keep-Alive
                 # Pet the watchdog by touching a file.
                 # Rust Supervisor will monitor this file's mtime.
+                # [FIX] Use cross-platform temp dir (usually /tmp on Linux)
+                import tempfile
+                lock_path = os.path.join(tempfile.gettempdir(), "agnix_watchdog.lock")
+
                 try:
-                    with open("/tmp/agnix_watchdog.lock", "w") as f:
+                    with open(lock_path, "w") as f:
                         f.write(str(time.time()))
                 except Exception as e:
                     print(f"[CRITICAL] Watchdog Pet Failed: {e}")

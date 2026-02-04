@@ -306,37 +306,48 @@ impl MotionController {
             }
 
             let mut computed_volts = 0.0;
-            let mut pos_measurement = Measurement::new(Nanometers(0.0), 0.0, 0);
 
+            // [FIX] Blind Halt: Always observe sensors and update state
             let input_voltage = self.voltage_monitor.read_input_voltage().unwrap_or(0.0);
+
+            // Update Thermal
+            let tf = safety_cache.get_thermal_field();
+            let tm = Measurement::new(tf, 0.01, 0);
+            self.last_thermal = Some(tm);
+
+            let time_s = system_start.elapsed().as_secs_f64();
+
+            // Poll Position Sensors (Always)
+            let mut pos_measurement = Measurement::new(Nanometers(0.0), 0.0, 0);
+            let mut est_pos = 0.0;
+
+            let measurement_result = self.get_true_position_measurement(time_s).await;
+
+            match measurement_result {
+                Ok(m) => {
+                    pos_measurement = m;
+                    self.last_position = Some(m);
+
+                    // Update Kalman Filter (Observation Mode)
+                    match self.kalman.update_checked(pos_measurement.value.0, 0.01) {
+                        Ok(p) => est_pos = p,
+                        Err(e) => {
+                            error!("KALMAN FAIL (Observation): {}", e);
+                            if is_system_active { self.emergency_stop(); }
+                        }
+                    }
+                },
+                Err(_) => {
+                    if is_system_active {
+                        self.emergency_stop();
+                        error!("SENSOR VOTE FAILED");
+                    }
+                }
+            }
+
             let sensor_health = if self.is_healthy() { "OK".to_string() } else { "FAULT".to_string() };
 
             if is_system_active {
-                // [FIX] Update Thermal State for is_healthy() check
-                // "Dead Thermal Check" logic flaw
-                let tf = safety_cache.get_thermal_field();
-                let tm = Measurement::new(tf, 0.01, 0); // Assuming 0.01 uncertainty from metrology
-                self.last_thermal = Some(tm);
-
-                let time_s = system_start.elapsed().as_secs_f64();
-                if let Ok(m) = self.get_true_position_measurement(time_s).await {
-                    pos_measurement = m;
-                    self.last_position = Some(m); // [FIX] Update state for checks
-                } else {
-                    // Voting failed -> Safety Violation
-                    self.emergency_stop();
-                    error!("SENSOR VOTE FAILED");
-                }
-
-                let est_pos = match self.kalman.update_checked(pos_measurement.value.0, 0.01) {
-                    Ok(p) => p,
-                    Err(e) => {
-                        self.emergency_stop();
-                        error!("KALMAN FAIL: {}", e);
-                        0.0
-                    }
-                };
-
                 if let Err(e) = self.envelope.validate_command(est_pos, 0.0) {
                      self.emergency_stop();
                      error!("ENVELOPE FAIL: {}", e);

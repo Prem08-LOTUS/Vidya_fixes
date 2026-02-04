@@ -83,7 +83,10 @@ pub async fn supervisor_task(
 
         // 2. Check Metrology Heartbeat (Python Watchdog)
         // [FIX] External Process Supervision
-        if let Ok(meta) = std::fs::metadata("/tmp/agnix_watchdog.lock") {
+        let mut temp_dir = std::env::temp_dir();
+        temp_dir.push("agnix_watchdog.lock");
+
+        if let Ok(meta) = std::fs::metadata(&temp_dir) {
             if let Ok(modified) = meta.modified() {
                 if let Ok(elapsed) = modified.elapsed() {
                     if elapsed.as_secs() > 2 {

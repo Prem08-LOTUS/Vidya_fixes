@@ -50,7 +50,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("AGNIX Control System Starting - Log Rotation Active");
 
     // [NEW] Load Config
-    let safety_config = config::load_config("agnix.toml").unwrap_or_default();
+    let safety_config = match config::load_config("agnix.toml") {
+        Ok(c) => {
+            info!("Loaded config from ./agnix.toml");
+            c
+        },
+        Err(_) => {
+            match config::load_config("../agnix.toml") {
+                Ok(c) => {
+                    info!("Loaded config from ../agnix.toml");
+                    c
+                },
+                Err(_) => {
+                    warn!("Config not found (agnix.toml). Using compiled-in SAFE DEFAULTS.");
+                    SafetyConfig::default()
+                }
+            }
+        }
+    };
 
     // 1. INIT PERSISTENCE
     let persistence = Arc::new(PersistenceManager::new("sqlite://./agnix.db").await?);
