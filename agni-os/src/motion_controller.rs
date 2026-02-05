@@ -393,10 +393,12 @@ impl MotionController {
                         }
                     }
                 },
-                Err(_) => {
+                Err(e) => {
+                    // Log error for debugging if needed
+                    // For safety, we treat it as Vote Failed.
                     if is_system_active {
                         self.emergency_stop();
-                        error!("SENSOR VOTE FAILED");
+                        error!("SENSOR VOTE FAILED: {}", e);
                     }
                 }
             }
