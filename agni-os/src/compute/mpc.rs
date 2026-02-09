@@ -25,47 +25,50 @@ impl MPC {
         self.solve(0.0, target_pos_um) // Temporary, assumes 0.0 start
     }
 
-    pub fn solve(&self, current_pos_um: f64, target_pos_um: f64) -> f64 {
-        let dt = 0.01; // 10ms
+    pub fn solve(&self, current_pos_um: f64, target_pos_um: f64, dt: f64) -> f64 {
+        // [FIX] Physics Torture Test: Removed F=ma (Inertia) model.
+        // Replaced with First-Order Lag (Kinematic/Stiffness).
+        // Model: x_dot = (k*u - x) / tau
+        // Discretized: x_next = x + (dt/tau) * (k*u - x)
+        // x_next = x*(1 - dt/tau) + u * (k*dt/tau)
 
-        // SIMPLE GRADIENT DESCENT SOLVER
-        // Cost J = sum( (pos - target)^2 * Q + u^2 * R )
-        // We iterate to find u that minimizes J.
+        // Constants for Piezo Stage
+        let gain_k = 100.0; // µm / Volt (Sensitivity)
+        let tau = 0.05;     // Time constant (50ms lag)
 
+        let alpha = dt / tau;
+        // Stability check: if dt > 2*tau, system oscillates.
+        // We clamp alpha to safe range (0..1) for simulation stability.
+        let alpha_safe = alpha.clamp(0.0, 1.0);
+
+        // Gradient Descent Tuning
         let mut u_candidate = 0.0;
-        let learning_rate = 0.5;
+        let learning_rate = 0.01; // Conservative step
 
-        for _ in 0..20 { // 20 iterations
-            // Predicted next state based on u_candidate
-            // x_next = x + v*dt
-            // v_next = v + a*dt = v + (u * coupling)*dt
-            // Simple model: 1V = 10 um/s^2 (Assumed coupling)
-            let coupling = 10.0;
+        for _ in 0..20 {
+            // Forward Prediction
+            // x_next = current + alpha * (gain * u - current)
+            let steady_state_target = gain_k * u_candidate;
+            let pos_next = current_pos_um + alpha_safe * (steady_state_target - current_pos_um);
 
-            // Prediction (One step lookahead for simplicity in this hotfix)
-            // In a full MPC, we'd unroll N_HORIZON.
-            // Here we fix the "non-positive" bug by ensuring the gradient points towards the target.
-
-            let pos_next = current_pos_um + 0.0 * dt + 0.5 * (u_candidate * coupling) * dt * dt;
             let error = pos_next - target_pos_um;
 
             // Gradient dJ/du
             // J = error^2 * Q + u^2 * R
-            // dJ/du = 2*error * (d_error/du) + 2*u*R
-            // d_error/du = 0.5 * coupling * dt^2
+            // d(pos_next)/du = alpha * gain_k
+            let d_pos_du = alpha_safe * gain_k;
 
-            let d_error_du = 0.5 * coupling * dt * dt;
-            let gradient = 2.0 * error * Q_TRACKING * d_error_du + 2.0 * u_candidate * R_EFFORT;
+            let dJ_du = 2.0 * error * Q_TRACKING * d_pos_du + 2.0 * u_candidate * R_EFFORT;
 
-            // Descent
-            u_candidate -= learning_rate * gradient;
+            // Update
+            u_candidate -= learning_rate * dJ_du;
 
-            // Clamp
+            // Clamp Voltage
             u_candidate = u_candidate.clamp(-MAX_VOLTAGE, MAX_VOLTAGE);
 
-            // [FIX] Floating Point Non-Determinism / NaN Propagation
+            // [FIX] NaN Safety
             if !u_candidate.is_finite() {
-                return 0.0; // Fail-Safe to 0V
+                return 0.0;
             }
         }
 
@@ -74,11 +77,11 @@ impl MPC {
 }
 
 pub trait MPCSolver {
-    fn solve(&self, filter: &PiezoKalman, target: f64) -> f64;
+    fn solve(&self, filter: &PiezoKalman, target: f64, dt: f64) -> f64;
 }
 
 impl MPCSolver for MPC {
-    fn solve(&self, _filter: &PiezoKalman, target: f64) -> f64 {
-        self.solve_optimal(_filter, target)
+    fn solve(&self, _filter: &PiezoKalman, target: f64, dt: f64) -> f64 {
+        self.solve(0.0, target, dt) // Fallback if called via trait with bad args
     }
 }

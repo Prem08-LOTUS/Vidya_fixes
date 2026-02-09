@@ -412,7 +412,12 @@ impl MotionController {
                 }
 
                 let target_um = self.active_target_nm.unwrap_or(est_pos) / 1000.0;
-                computed_volts = self.compute.step(est_pos / 1000.0, target_um);
+                // Calculate dt since last loop (using system_start as monotonic base or just assume 10ms target?)
+                // The loop interval is 10ms. Real jitter matters for integration but for MPC step 10ms is the nominal.
+                // Let's use 0.01 for now to match the loop rate, or better: measure actual dt.
+                // We have `start` (Instant) of loop. We need `last_loop_start`.
+                // For simplicity/robustness in this patch, we use fixed dt=0.01 as MPC assumes constant step size usually.
+                computed_volts = self.compute.step(est_pos / 1000.0, target_um, 0.01);
 
                 // [SIMULATION FEEDBACK LOOP]
                 if let Some(sim) = &mut self.sim_driver {

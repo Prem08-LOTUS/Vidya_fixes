@@ -39,9 +39,9 @@ impl ComputeEngine {
     ///
     /// # Returns
     /// Optimal voltage command (V)
-    pub fn step(&mut self, filtered_z: f64, target_z: f64) -> f64 {
+    pub fn step(&mut self, filtered_z: f64, target_z: f64, dt: f64) -> f64 {
         // [FIX] Actually call MPC
-        self.mpc.solve(filtered_z, target_z)
+        self.mpc.solve(filtered_z, target_z, dt)
     }
 
     pub fn position(&self) -> f64 {
