@@ -16,6 +16,7 @@ use crate::safety::envelope::PhysicsConstraints;
 use crate::safety::voting::SensorVoter;
 use crate::safety::voting::{voting_2oo3, VoteResult, SensorStatus};
 use crate::compute::kalman::PiezoKalman;
+use crate::physics::slew_limiter::SlewRateLimiter;
 use crate::config::SafetyConfig;
 
 use std::time::{Duration, Instant};
@@ -71,6 +72,7 @@ pub struct MotionController {
     voter: SensorVoter,
     kalman: PiezoKalman,
     envelope: EnvelopeGuardian,
+    slew_limiter: SlewRateLimiter,
 
     config: SafetyConfig,
 }
@@ -157,6 +159,7 @@ impl MotionController {
             voter: SensorVoter::new(100000.0),
             kalman: PiezoKalman::new(),
             envelope: EnvelopeGuardian::new(constraints),
+            slew_limiter: SlewRateLimiter::new(100.0), // 100 V/s limit
             config,
         })
     }
@@ -417,7 +420,10 @@ impl MotionController {
                 // Let's use 0.01 for now to match the loop rate, or better: measure actual dt.
                 // We have `start` (Instant) of loop. We need `last_loop_start`.
                 // For simplicity/robustness in this patch, we use fixed dt=0.01 as MPC assumes constant step size usually.
-                computed_volts = self.compute.step(est_pos / 1000.0, target_um, 0.01);
+                let raw_volts = self.compute.step(est_pos / 1000.0, target_um, 0.01);
+
+                // [FIX] Slew Rate Limiting (Hardware Protection)
+                computed_volts = self.slew_limiter.limit(raw_volts, 0.01);
 
                 // [SIMULATION FEEDBACK LOOP]
                 if let Some(sim) = &mut self.sim_driver {

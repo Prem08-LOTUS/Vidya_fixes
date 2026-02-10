@@ -116,7 +116,7 @@ impl SensorMonitor {
 
                     // Check freshness (5s)
                     // [FIX] Use u128 to prevent overflow/truncation issues
-                    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+                    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or(std::time::Duration::ZERO).as_millis();
                     if now.abs_diff(msg.timestamp as u128) > 5000 {
                         error!("SECURITY: Replay Attack Detected (Stale Timestamp)");
                         return Measurement::new(ThermalField::default(), f64::INFINITY, 0);
