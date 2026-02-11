@@ -1,0 +1,11 @@
+[[modules]]
+path = "src/safety"
+depends_on = []
+
+[[modules]]
+path = "src/motion_controller"
+depends_on = ["src/safety", "src/io", "src/compute", "src/telemetry", "src/types", "src/supervisor", "src/config"]
+
+[[modules]]
+path = "src/main"
+depends_on = ["src/motion_controller", "src/sensor_monitor", "src/persistence", "src/supervisor", "src/gdsii_processor", "src/config"]
