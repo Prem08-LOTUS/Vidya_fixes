@@ -1,0 +1,6 @@
+agni-os/target/
+node_modules/
+dist/
+build/
+*.db
+*.log

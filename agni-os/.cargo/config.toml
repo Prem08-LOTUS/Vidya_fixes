@@ -1,0 +1,6 @@
+[build]
+# FIX #95: The "CPU Feature" Lottery
+# Do NOT use "native" which might inject AVX-512.
+# Use a safe baseline that runs on industrial Atoms/Pentiums.
+rustflags = ["-C", "target-cpu=x86-64-v3"]
+# v3 covers AVX/AVX2 but avoids dangerous AVX-512 instructions that might SIGILL on older chips.

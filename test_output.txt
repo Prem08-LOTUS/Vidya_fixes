@@ -1,0 +1,170 @@
+ Downloading crates ...
+  Downloaded anes v0.1.6
+  Downloaded ciborium v0.2.2
+  Downloaded bit-set v0.5.3
+  Downloaded async-stream-impl v0.3.6
+  Downloaded async-stream v0.3.6
+  Downloaded cast v0.3.0
+  Downloaded clap_lex v0.7.6
+  Downloaded rand_xorshift v0.3.0
+  Downloaded wait-timeout v0.2.1
+  Downloaded unarray v0.1.4
+  Downloaded quick-error v1.2.3
+  Downloaded plotters-svg v0.3.7
+  Downloaded plotters-backend v0.3.7
+  Downloaded tokio-test v0.4.4
+  Downloaded tinytemplate v1.2.1
+  Downloaded anstyle v1.0.13
+  Downloaded rusty-fork v0.3.1
+  Downloaded oorandom v11.1.5
+  Downloaded criterion-plot v0.5.0
+  Downloaded is-terminal v0.4.17
+  Downloaded rayon-core v1.13.0
+  Downloaded criterion v0.5.1
+  Downloaded itertools v0.10.5
+  Downloaded clap_builder v4.5.53
+  Downloaded plotters v0.3.7
+  Downloaded rayon v1.11.0
+  Downloaded clap v4.5.53
+  Downloaded bit-vec v0.6.3
+  Downloaded proptest v1.4.0
+  Downloaded ciborium-ll v0.2.2
+  Downloaded ciborium-io v0.2.2
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.178
+   Compiling once_cell v1.21.3
+   Compiling smallvec v1.15.1
+   Compiling scopeguard v1.2.0
+   Compiling serde_core v1.0.228
+   Compiling pin-project-lite v0.2.16
+   Compiling libm v0.2.15
+   Compiling lock_api v0.4.14
+   Compiling futures-core v0.3.31
+   Compiling stable_deref_trait v1.2.1
+   Compiling log v0.4.29
+   Compiling bytes v1.11.0
+   Compiling num-traits v0.2.19
+   Compiling memchr v2.7.6
+   Compiling zerofrom v0.1.6
+   Compiling yoke v0.8.1
+   Compiling getrandom v0.2.16
+   Compiling itoa v1.0.17
+   Compiling zeroize v1.8.2
+   Compiling untrusted v0.9.0
+   Compiling zerovec v0.11.5
+   Compiling typenum v1.19.0
+   Compiling serde v1.0.228
+   Compiling slab v0.4.11
+   Compiling futures-io v0.3.31
+   Compiling futures-task v0.3.31
+   Compiling pin-utils v0.1.0
+   Compiling parking_lot_core v0.9.12
+   Compiling equivalent v1.0.2
+   Compiling generic-array v0.14.7
+   Compiling mio v1.1.1
+   Compiling parking_lot v0.12.5
+   Compiling errno v0.3.14
+   Compiling signal-hook-registry v1.4.8
+   Compiling tinystr v0.8.2
+   Compiling socket2 v0.6.2
+   Compiling futures-sink v0.3.31
+   Compiling litemap v0.8.1
+   Compiling crossbeam-utils v0.8.21
+   Compiling writeable v0.6.2
+   Compiling crypto-common v0.1.7
+   Compiling icu_locale_core v2.1.1
+   Compiling block-buffer v0.10.4
+   Compiling potential_utf v0.1.4
+   Compiling tokio v1.49.0
+   Compiling zerotrie v0.2.3
+   Compiling spin v0.9.8
+   Compiling subtle v2.6.1
+   Compiling icu_collections v2.1.1
+   Compiling icu_provider v2.1.1
+   Compiling rustls-pki-types v1.13.2
+   Compiling hashbrown v0.16.1
+   Compiling bitflags v2.4.1
+   Compiling thiserror v2.0.17
+   Compiling icu_normalizer_data v2.1.1
+   Compiling icu_properties_data v2.1.2
+   Compiling futures-channel v0.3.31
+   Compiling tracing-core v0.1.36
+   Compiling indexmap v2.12.1
+   Compiling zerocopy v0.8.31
+   Compiling ryu v1.0.22
+   Compiling const-oid v0.9.6
+   Compiling futures-util v0.3.31
+   Compiling icu_properties v2.1.2
+   Compiling icu_normalizer v2.1.1
+   Compiling ring v0.17.14
+   Compiling zerocopy-derive v0.8.31
+   Compiling foldhash v0.1.5
+   Compiling percent-encoding v2.3.2
+   Compiling allocator-api2 v0.2.21
+   Compiling form_urlencoded v1.2.2
+   Compiling hashbrown v0.15.5
+   Compiling idna_adapter v1.2.1
+   Compiling pyo3-build-config v0.23.5
+   Compiling serde_json v1.0.108
+   Compiling either v1.15.0
+   Compiling utf8_iter v1.0.4
+   Compiling idna v1.1.0
+   Compiling iana-time-zone v0.1.64
+   Compiling fnv v1.0.7
+   Compiling parking v2.2.1
+   Compiling cpufeatures v0.2.17
+   Compiling url v2.5.7
+   Compiling tracing v0.1.40
+   Compiling webpki-roots v1.0.4
+   Compiling crc-catalog v2.4.0
+   Compiling crc v3.4.0
+   Compiling webpki-roots v0.26.11
+   Compiling getrandom v0.3.4
+   Compiling hashlink v0.10.0
+   Compiling digest v0.10.7
+   Compiling rand_core v0.6.4
+   Compiling base64 v0.22.1
+   Compiling concurrent-queue v2.5.0
+   Compiling rustls-webpki v0.103.8
+   Compiling http v0.2.12
+   Compiling serde_urlencoded v0.7.1
+   Compiling lazy_static v1.5.0
+   Compiling num-integer v0.1.46
+   Compiling base64ct v1.8.1
+   Compiling foreign-types-shared v0.1.1
+   Compiling foreign-types v0.3.2
+   Compiling pem-rfc7468 v0.7.0
+   Compiling libudev-sys v0.1.4
+error: failed to run custom build command for `libudev-sys v0.1.4`
+
+Caused by:
+  process didn't exit successfully: `/app/agni-os/target/debug/build/libudev-sys-03697ada33434828/build-script-build` (exit status: 101)
+  --- stdout
+  cargo:rerun-if-env-changed=LIBUDEV_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=LIBUDEV_STATIC
+  cargo:rerun-if-env-changed=LIBUDEV_DYNAMIC
+  cargo:rerun-if-env-changed=PKG_CONFIG_ALL_STATIC
+  cargo:rerun-if-env-changed=PKG_CONFIG_ALL_DYNAMIC
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+
+  --- stderr
+
+  thread 'main' (12239) panicked at /home/jules/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libudev-sys-0.1.4/build.rs:38:41:
+  called `Result::unwrap()` on an `Err` value: "\npkg-config exited with status code 1\n> PKG_CONFIG_ALLOW_SYSTEM_LIBS=1 PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags libudev\n\nThe system library `libudev` required by crate `libudev-sys` was not found.\nThe file `libudev.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.\nThe PKG_CONFIG_PATH environment variable is not set.\n\nHINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `libudev.pc`.\n"
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+warning: build failed, waiting for other jobs to finish...

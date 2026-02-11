@@ -1,0 +1,213 @@
+   Compiling agnix v0.4.6 (/app/agni-os)
+warning: unused imports: `SensorStatus`, `VoteResult`, and `voting_2oo3`
+  --> src/motion_controller.rs:17:29
+   |
+17 | use crate::safety::voting::{voting_2oo3, VoteResult, SensorStatus};
+   |                             ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Context`
+  --> src/motion_controller.rs:25:28
+   |
+25 | use anyhow::{Result, bail, Context};
+   |                            ^^^^^^^
+
+warning: unused import: `std::fs::OpenOptions`
+  --> src/motion_controller.rs:29:5
+   |
+29 | use std::fs::OpenOptions;
+   |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::io::Write`
+  --> src/motion_controller.rs:30:5
+   |
+30 | use std::io::Write;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `rand::Rng`
+  --> src/motion_controller.rs:31:5
+   |
+31 | use rand::Rng; // [FIX] Added for sensor simulation
+   |     ^^^^^^^^^
+
+warning: unused import: `Matrix2`
+ --> src/compute/mpc.rs:1:25
+  |
+1 | use nalgebra::{Vector2, Matrix2};
+  |                         ^^^^^^^
+
+warning: unused imports: `SensorStatus`, `VoteResult`, and `voting_2oo3`
+ --> src/sensor_monitor.rs:2:29
+  |
+2 | use crate::safety::voting::{voting_2oo3, VoteResult, SensorStatus};
+  |                             ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeMap`
+  --> src/sensor_monitor.rs:12:5
+   |
+12 | use std::collections::BTreeMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `uuid::Uuid`
+ --> src/types.rs:3:5
+  |
+3 | use uuid::Uuid;
+  |     ^^^^^^^^^^
+
+warning: unused import: `warn`
+ --> src/supervisor.rs:7:28
+  |
+7 | use tracing::{error, info, warn};
+  |                            ^^^^
+
+warning: unused import: `error`
+ --> src/io/grbl_reader.rs:2:21
+  |
+2 | use tracing::{warn, error};
+  |                     ^^^^^
+
+warning: unused import: `std::sync::Mutex`
+ --> src/io/sim_driver.rs:1:5
+  |
+1 | use std::sync::Mutex;
+  |     ^^^^^^^^^^^^^^^^
+
+warning: unexpected `cfg` condition name: `kani`
+ --> src/verification_harness.rs:3:7
+  |
+3 | #[cfg(kani)]
+  |       ^^^^
+  |
+  = help: expected names are: `docsrs`, `feature`, and `test` and 31 more
+  = help: consider using a Cargo feature instead
+  = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+           [lints.rust]
+           unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+  = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(kani)");` to the top of the `build.rs`
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+  = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: variable does not need to be mutable
+   --> src/motion_controller.rs:122:19
+    |
+122 |         if let Ok(mut rec) = self.flight_recorder.lock() {
+    |                   ----^^^
+    |                   |
+    |                   help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `port`
+   --> src/motion_controller.rs:170:31
+    |
+170 |     pub fn connect(&mut self, port: &str) -> Result<()> {
+    |                               ^^^^ help: if this is intentional, prefix it with an underscore: `_port`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `SERIAL_IO_TIMEOUT_MS` is never used
+  --> src/motion_controller.rs:38:7
+   |
+38 | const SERIAL_IO_TIMEOUT_MS: u64 = 5;
+   |       ^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `port_path`, `grbl_parser`, `hysteresis`, `active_scan`, `scan_index`, and `voter` are never read
+  --> src/motion_controller.rs:49:5
+   |
+46 | pub struct MotionController {
+   |            ---------------- fields in this struct
+...
+49 |     port_path: Option<String>,
+   |     ^^^^^^^^^
+...
+53 |     grbl_parser: GrblStatusBuffer,
+   |     ^^^^^^^^^^^
+...
+59 |     hysteresis: HysteresisState,
+   |     ^^^^^^^^^^
+...
+64 |     active_scan: Option<Arc<Vec<(f64, f64)>>>,
+   |     ^^^^^^^^^^^
+65 |     scan_index: usize,
+   |     ^^^^^^^^^^
+...
+72 |     voter: SensorVoter,
+   |     ^^^^^
+
+warning: constant `N_HORIZON` is never used
+ --> src/compute/mpc.rs:5:7
+  |
+5 | const N_HORIZON: usize = 10;
+  |       ^^^^^^^^^
+
+warning: field `state` is never read
+  --> src/compute/mpc.rs:13:5
+   |
+11 | pub struct MPC {
+   |            --- field in this struct
+12 |     // Legacy fields kept for compatibility if needed, or simplified
+13 |     state: Vector2<f64>, // [position, velocity]
+   |     ^^^^^
+   |
+   = note: `MPC` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: variable `dJ_du` should have a snake case name
+  --> src/compute/mpc.rs:61:17
+   |
+61 |             let dJ_du = 2.0 * error * Q_TRACKING * d_pos_du + 2.0 * u_candidate * R_EFFORT;
+   |                 ^^^^^ help: convert the identifier to snake case: `d_j_du`
+   |
+   = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: `agnix` (lib) generated 20 warnings (run `cargo fix --lib -p agnix` to apply 14 suggestions)
+warning: unused import: `std::path::PathBuf`
+  --> src/main.rs:10:5
+   |
+10 | use std::path::PathBuf;
+   |     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `MotionIntent`
+  --> src/main.rs:14:46
+   |
+14 | use agnix::persistence::{PersistenceManager, MotionIntent, RecoveryState, SystemSnapshot};
+   |                                              ^^^^^^^^^^^^
+
+warning: unused imports: `Nanometers` and `ThermalField`
+  --> src/main.rs:16:29
+   |
+16 | use agnix::physics::types::{Nanometers, ThermalField};
+   |                             ^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused import: `agnix::gdsii_processor::GdsiiStreamingParser`
+  --> src/main.rs:20:5
+   |
+20 | use agnix::gdsii_processor::GdsiiStreamingParser;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `intent_id`
+   --> src/main.rs:140:55
+    |
+140 |                         TelemetryEvent::MotionError { intent_id, error } => {
+    |                                                       ^^^^^^^^^ help: try ignoring the field: `intent_id: _`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cmd_tx`
+  --> src/main.rs:81:10
+   |
+81 |     let (cmd_tx, cmd_rx) = mpsc::channel::<ControlCommand>(16);
+   |          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_cmd_tx`
+
+warning: unused variable: `priority_tx`
+  --> src/main.rs:82:10
+   |
+82 |     let (priority_tx, priority_rx) = mpsc::unbounded_channel();
+   |          ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_priority_tx`
+
+warning: `agnix` (bin "agnix") generated 7 warnings (run `cargo fix --bin "agnix" -p agnix` to apply 7 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.05s

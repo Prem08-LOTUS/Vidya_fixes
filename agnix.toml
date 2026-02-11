@@ -1,0 +1,8 @@
+min_safe_voltage = 22.0
+metrology_trust_limit_nm = 5.0
+
+[physics]
+max_vel_nm_s = 5000.0
+max_acc_nm_s2 = 50000.0
+soft_limit_min_nm = -100.0
+soft_limit_max_nm = 1000000.0

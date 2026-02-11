@@ -1,0 +1,4 @@
+agni-os/src/sensor_monitor.rs:use crate::safety::voting::{voting_2oo3, VoteResult, SensorStatus};
+agni-os/src/motion_controller.rs:use crate::safety::voting::{voting_2oo3, VoteResult, SensorStatus};
+agni-os/src/safety/voting.rs:pub fn voting_2oo3(
+agni-os/src/safety/voting.rs:        let result = voting_2oo3(inputs, tol)?;
