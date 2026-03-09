@@ -1,0 +1,144 @@
+   Compiling proc-macro2 v1.0.104
+    Checking smallvec v1.15.1
+   Compiling ring v0.17.14
+    Checking stable_deref_trait v1.2.1
+   Compiling vcpkg v0.2.15
+    Checking getrandom v0.2.16
+    Checking parking_lot_core v0.9.12
+    Checking bytes v1.11.0
+    Checking parking_lot v0.12.5
+   Compiling quote v1.0.42
+    Checking mio v1.1.1
+    Checking errno v0.3.14
+   Compiling thiserror v2.0.17
+   Compiling syn v2.0.111
+    Checking signal-hook-registry v1.4.8
+    Checking socket2 v0.6.2
+    Checking itoa v1.0.17
+    Checking zeroize v1.8.2
+    Checking spin v0.9.8
+   Compiling pyo3-build-config v0.23.5
+    Checking tracing-core v0.1.36
+    Checking typenum v1.19.0
+   Compiling writeable v0.6.2
+    Checking const-oid v0.9.6
+    Checking untrusted v0.9.0
+   Compiling litemap v0.8.1
+   Compiling pin-project-lite v0.2.16
+   Compiling futures-core v0.3.31
+   Compiling serde_json v1.0.108
+    Checking generic-array v0.14.7
+   Compiling scopeguard v1.2.0
+   Compiling rustls v0.23.35
+   Compiling rustls-pki-types v1.13.2
+   Compiling lock_api v0.4.14
+   Compiling openssl-sys v0.9.111
+   Compiling synstructure v0.13.2
+   Compiling icu_normalizer_data v2.1.1
+   Compiling icu_properties_data v2.1.2
+   Compiling num-traits v0.2.19
+    Checking bitflags v2.4.1
+    Checking subtle v2.6.1
+   Compiling futures-sink v0.3.31
+    Checking hashbrown v0.16.1
+    Checking block-buffer v0.10.4
+    Checking crypto-common v0.1.7
+   Compiling libsqlite3-sys v0.30.1
+    Checking indexmap v2.12.1
+   Compiling crossbeam-utils v0.8.21
+   Compiling zerofrom-derive v0.1.6
+   Compiling yoke-derive v0.8.1
+   Compiling zerovec-derive v0.11.2
+   Compiling displaydoc v0.2.5
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.17
+   Compiling zerofrom v0.1.6
+   Compiling yoke v0.8.1
+   Compiling zerovec v0.11.5
+   Compiling tracing-attributes v0.1.31
+   Compiling tokio-macros v2.6.0
+   Compiling tinystr v0.8.2
+   Compiling futures-macro v0.3.31
+    Checking tokio v1.49.0
+    Checking futures-util v0.3.31
+   Compiling icu_locale_core v2.1.1
+    Checking serde v1.0.228
+   Compiling potential_utf v0.1.4
+   Compiling zerotrie v0.2.3
+   Compiling icu_provider v2.1.1
+   Compiling icu_collections v2.1.1
+   Compiling icu_properties v2.1.2
+   Compiling icu_normalizer v2.1.1
+    Checking tracing v0.1.40
+   Compiling percent-encoding v2.3.2
+   Compiling form_urlencoded v1.2.2
+   Compiling idna_adapter v1.2.1
+    Checking digest v0.10.7
+   Compiling foldhash v0.1.5
+    Checking fnv v1.0.7
+   Compiling futures-io v0.3.31
+   Compiling utf8_iter v1.0.4
+   Compiling pin-utils v0.1.0
+   Compiling ryu v1.0.22
+   Compiling allocator-api2 v0.2.21
+   Compiling slab v0.4.11
+   Compiling futures-task v0.3.31
+   Compiling hashbrown v0.15.5
+   Compiling idna v1.1.0
+    Checking http v0.2.12
+   Compiling rustls-webpki v0.103.8
+   Compiling rustc_version v0.4.1
+    Checking either v1.15.0
+   Compiling concurrent-queue v2.5.0
+   Compiling webpki-roots v1.0.4
+   Compiling libudev-sys v0.1.4
+    Checking num-integer v0.1.46
+    Checking foreign-types-shared v0.1.1
+   Compiling log v0.4.29
+   Compiling cpufeatures v0.2.17
+   Compiling openssl v0.10.75
+   Compiling crc-catalog v2.4.0
+   Compiling parking v2.2.1
+   Compiling httparse v1.10.1
+   Compiling iana-time-zone v0.1.64
+    Checking base64ct v1.8.1
+   Compiling chrono v0.4.42
+    Checking pem-rfc7468 v0.7.0
+   Compiling tokio-stream v0.1.17
+   Compiling event-listener v5.4.1
+   Compiling crc v3.4.0
+   Compiling sha2 v0.10.9
+    Checking foreign-types v0.3.2
+error: failed to run custom build command for `libudev-sys v0.1.4`
+
+Caused by:
+  process didn't exit successfully: `/app/agni-os/target/debug/build/libudev-sys-03697ada33434828/build-script-build` (exit status: 101)
+  --- stdout
+  cargo:rerun-if-env-changed=LIBUDEV_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=LIBUDEV_STATIC
+  cargo:rerun-if-env-changed=LIBUDEV_DYNAMIC
+  cargo:rerun-if-env-changed=PKG_CONFIG_ALL_STATIC
+  cargo:rerun-if-env-changed=PKG_CONFIG_ALL_DYNAMIC
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64-unknown-linux-gnu
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64_unknown_linux_gnu
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+
+  --- stderr
+
+  thread 'main' (8957) panicked at /home/jules/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libudev-sys-0.1.4/build.rs:38:41:
+  called `Result::unwrap()` on an `Err` value: "\npkg-config exited with status code 1\n> PKG_CONFIG_ALLOW_SYSTEM_LIBS=1 PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags libudev\n\nThe system library `libudev` required by crate `libudev-sys` was not found.\nThe file `libudev.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.\nThe PKG_CONFIG_PATH environment variable is not set.\n\nHINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `libudev.pc`.\n"
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+warning: build failed, waiting for other jobs to finish...
